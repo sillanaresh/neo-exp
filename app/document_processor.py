@@ -26,9 +26,18 @@ class DocumentProcessor:
             return self._process_text(file_path)
 
     def _process_markdown(self, file_path: str) -> str:
-        """Read markdown file"""
+        """Read markdown file and strip embedded images"""
         with open(file_path, 'r', encoding='utf-8') as f:
-            return f.read()
+            content = f.read()
+
+        # Remove base64 embedded images (common in Google Docs exports)
+        # Pattern: ![alt](data:image/...)
+        content = re.sub(r'!\[([^\]]*)\]\(data:image/[^)]+\)', r'[Image: \1]', content)
+
+        # Remove regular image references but keep alt text
+        content = re.sub(r'!\[([^\]]*)\]\([^)]+\)', r'[Image: \1]', content)
+
+        return content
 
     def _process_pdf(self, file_path: str) -> str:
         """Extract text from PDF"""
@@ -55,6 +64,9 @@ class DocumentProcessor:
         paragraphs = text.split('\n\n')
         sentences = []
         for para in paragraphs:
+            # Skip empty paragraphs
+            if not para.strip():
+                continue
             # Split paragraph into sentences
             para_sentences = re.split(r'(?<=[.!?])\s+', para)
             sentences.extend(para_sentences)
@@ -64,8 +76,34 @@ class DocumentProcessor:
         current_tokens = 0
 
         for sentence in sentences:
+            # Skip empty sentences
+            if not sentence.strip():
+                continue
+
             # Count tokens in this sentence
             sentence_tokens = len(self.encoder.encode(sentence))
+
+            # If single sentence is too large, split it forcefully by words
+            if sentence_tokens > self.max_tokens:
+                print(f"Force splitting large sentence with {sentence_tokens} tokens")
+                # First, save any current chunk
+                if current_chunk_sentences:
+                    chunk_text = " ".join(current_chunk_sentences)
+                    chunks.append({
+                        'text': chunk_text.strip(),
+                        'metadata': metadata
+                    })
+                    current_chunk_sentences = []
+                    current_tokens = 0
+
+                # Then split the large sentence
+                sub_chunks = self._split_large_text(sentence)
+                for sub_chunk in sub_chunks:
+                    chunks.append({
+                        'text': sub_chunk.strip(),
+                        'metadata': metadata
+                    })
+                continue
 
             # If adding this sentence exceeds max tokens, save current chunk
             if current_tokens + sentence_tokens > self.max_tokens and current_chunk_sentences:
@@ -87,12 +125,68 @@ class DocumentProcessor:
         # Add final chunk
         if current_chunk_sentences:
             chunk_text = " ".join(current_chunk_sentences)
-            chunks.append({
-                'text': chunk_text.strip(),
-                'metadata': metadata
-            })
+            # Double check this final chunk isn't too large
+            final_tokens = len(self.encoder.encode(chunk_text))
+            if final_tokens > self.max_tokens:
+                print(f"Final chunk too large ({final_tokens} tokens), force splitting")
+                sub_chunks = self._split_large_text(chunk_text)
+                for sub_chunk in sub_chunks:
+                    chunks.append({
+                        'text': sub_chunk.strip(),
+                        'metadata': metadata
+                    })
+            else:
+                chunks.append({
+                    'text': chunk_text.strip(),
+                    'metadata': metadata
+                })
 
         return chunks
+
+    def _split_large_text(self, text: str) -> List[str]:
+        """Force split text that's too large by splitting on words with token validation"""
+        words = text.split()
+        chunks = []
+        current_chunk = []
+
+        for word in words:
+            # Try adding this word
+            test_chunk = current_chunk + [word]
+            test_text = " ".join(test_chunk)
+            test_tokens = len(self.encoder.encode(test_text))
+
+            if test_tokens >= self.max_tokens:
+                # Save current chunk if it has content
+                if current_chunk:
+                    chunk_text = " ".join(current_chunk)
+                    chunks.append(chunk_text)
+                    print(f"Created force-split chunk: {len(self.encoder.encode(chunk_text))} tokens")
+                # Start new chunk with current word
+                current_chunk = [word]
+            else:
+                # Word fits, add it
+                current_chunk.append(word)
+
+        # Add remaining words
+        if current_chunk:
+            chunk_text = " ".join(current_chunk)
+            chunks.append(chunk_text)
+            print(f"Created final force-split chunk: {len(self.encoder.encode(chunk_text))} tokens")
+
+        # Final validation - ensure NO chunk exceeds limit
+        validated_chunks = []
+        for i, chunk in enumerate(chunks):
+            tokens = len(self.encoder.encode(chunk))
+            if tokens > self.max_tokens:
+                print(f"ERROR: Force-split chunk {i} still has {tokens} tokens - truncating!")
+                # Last resort: truncate by tokens directly
+                encoded = self.encoder.encode(chunk)
+                truncated = self.encoder.decode(encoded[:self.max_tokens])
+                validated_chunks.append(truncated)
+            else:
+                validated_chunks.append(chunk)
+
+        return validated_chunks
 
     def _get_overlap_sentences(self, sentences: List[str]) -> List[str]:
         """Get last few sentences for overlap, staying under overlap token limit"""
@@ -130,6 +224,12 @@ class DocumentProcessor:
         }
 
         chunks = self.chunk_text(text, metadata)
+
+        # Validate all chunks are under token limit
+        for i, chunk in enumerate(chunks):
+            chunk_tokens = len(self.encoder.encode(chunk['text']))
+            if chunk_tokens > self.max_tokens:
+                print(f"WARNING: Chunk {i} has {chunk_tokens} tokens (over {self.max_tokens} limit)")
 
         print(f"Processed {document_name}: {len(chunks)} chunks created")
         return chunks

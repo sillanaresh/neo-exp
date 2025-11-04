@@ -115,6 +115,10 @@ async def upload_document(
         # Clean up on error
         if temp_path.exists():
             os.remove(temp_path)
+        # Log the full error for debugging
+        import traceback
+        print(f"ERROR in upload: {str(e)}")
+        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Error processing document: {str(e)}")
 
 # List documents

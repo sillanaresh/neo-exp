@@ -32,8 +32,13 @@ class VectorStore:
             while not self.pc.describe_index(self.index_name).status['ready']:
                 time.sleep(1)
 
-        self.index = self.pc.Index(self.index_name)
-        print(f"Connected to index: {self.index_name}")
+        # Get the index host URL to avoid 'Malformed domain' errors
+        index_info = self.pc.describe_index(self.index_name)
+        index_host = index_info.host
+
+        # Connect using host URL instead of name
+        self.index = self.pc.Index(host=index_host)
+        print(f"Connected to index: {self.index_name} (host: {index_host})")
 
     def create_embedding(self, text: str) -> List[float]:
         """Create embedding using OpenAI"""
@@ -104,15 +109,26 @@ class VectorStore:
 
         return formatted_results
 
-    def list_documents(self) -> List[str]:
+    def list_documents(self) -> dict:
         """List all unique documents in the index"""
         # Query with a dummy vector to get some results
         stats = self.index.describe_index_stats()
 
-        # For now, return stats - we'll track documents separately in metadata
+        # Extract only the data we need, avoiding complex objects
+        total_count = stats.total_vector_count if hasattr(stats, 'total_vector_count') else 0
+
+        # Convert namespaces to simple dict
+        namespaces_data = {}
+        if hasattr(stats, 'namespaces') and stats.namespaces:
+            for ns_name, ns_obj in stats.namespaces.items():
+                if hasattr(ns_obj, 'vector_count'):
+                    namespaces_data[ns_name] = ns_obj.vector_count
+                else:
+                    namespaces_data[ns_name] = 0
+
         return {
-            'total_vectors': stats.total_vector_count,
-            'namespaces': stats.namespaces
+            'total_vectors': total_count,
+            'namespaces': namespaces_data
         }
 
     def delete_document(self, document_name: str):
@@ -123,11 +139,10 @@ class VectorStore:
         print(f"Delete operation for {document_name} - requires fetching IDs")
         # TODO: Implement proper deletion by querying and deleting matching IDs
 
-# Global instance - lazy loaded
-_vector_store = None
-
 def get_vector_store():
-    global _vector_store
-    if _vector_store is None:
-        _vector_store = VectorStore()
-    return _vector_store
+    """
+    Create a fresh VectorStore instance each time.
+    This ensures we always have the latest index connection,
+    avoiding 'Malformed domain' errors when indexes are deleted/recreated.
+    """
+    return VectorStore()
