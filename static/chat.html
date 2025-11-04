@@ -631,11 +631,19 @@
             if (savedHistory) {
                 try {
                     const messages = JSON.parse(savedHistory);
-                    messages.forEach(msg => {
-                        addMessage(msg.content, msg.type, null, false); // false = don't save again
-                    });
+                    // Check if we have valid messages
+                    if (messages && messages.length > 0) {
+                        messages.forEach(msg => {
+                            addMessage(msg.content, msg.type, null, false); // false = don't save again
+                        });
+                    } else {
+                        // No valid messages, show welcome
+                        showWelcomeMessage();
+                    }
                 } catch (e) {
                     console.error('Error loading history:', e);
+                    // Clear corrupted data and show welcome
+                    localStorage.removeItem(STORAGE_KEY);
                     showWelcomeMessage();
                 }
             } else {
