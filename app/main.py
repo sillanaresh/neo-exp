@@ -1,6 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
@@ -23,6 +23,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Get base directory
+BASE_DIR = Path(__file__).resolve().parent.parent
+STATIC_DIR = BASE_DIR / "static"
 
 # Create uploads directory
 UPLOAD_DIR = Path("uploads")
@@ -152,22 +156,20 @@ async def search_endpoint(query: str, top_k: int = 5):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# Serve static files (HTML/CSS/JS)
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
 # Serve the main chat interface
 @app.get("/chat", response_class=HTMLResponse)
 async def chat_interface():
     """Serve the chat interface"""
-    with open("static/chat.html", "r") as f:
-        return HTMLResponse(content=f.read())
+    return FileResponse(STATIC_DIR / "chat.html")
 
 # Serve the admin interface
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_interface():
     """Serve the admin interface"""
-    with open("static/admin.html", "r") as f:
-        return HTMLResponse(content=f.read())
+    return FileResponse(STATIC_DIR / "admin.html")
+
+# Serve static files (HTML/CSS/JS) - mount at the end
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 if __name__ == "__main__":
     import uvicorn
