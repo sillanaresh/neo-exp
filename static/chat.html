@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Neo AI Assistant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -12,8 +13,8 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
             height: 100vh;
             display: flex;
             justify-content: center;
@@ -23,44 +24,64 @@
 
         .chat-container {
             background: white;
-            border-radius: 16px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             width: 100%;
-            max-width: 800px;
+            max-width: 900px;
             height: 90vh;
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            border: 1px solid #e5e7eb;
         }
 
         .chat-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            text-align: center;
-            border-radius: 16px 16px 0 0;
+            background: white;
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .chat-header h1 {
-            font-size: 24px;
+        .header-left h1 {
+            font-size: 20px;
             font-weight: 600;
+            color: #111827;
+            margin-bottom: 4px;
         }
 
-        .chat-header p {
+        .header-left p {
             font-size: 14px;
-            opacity: 0.9;
-            margin-top: 5px;
+            color: #6b7280;
+        }
+
+        .clear-button {
+            padding: 8px 16px;
+            background: white;
+            color: #6b7280;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .clear-button:hover {
+            background: #f9fafb;
+            border-color: #d1d5db;
         }
 
         .messages-container {
             flex: 1;
             overflow-y: auto;
-            padding: 20px;
-            background: #f7f9fc;
+            padding: 24px;
+            background: #fafafa;
         }
 
         .message {
-            margin-bottom: 16px;
+            margin-bottom: 20px;
             display: flex;
             animation: fadeIn 0.3s ease-in;
         }
@@ -77,89 +98,105 @@
         .message-content {
             max-width: 70%;
             padding: 12px 16px;
-            border-radius: 12px;
+            border-radius: 8px;
             word-wrap: break-word;
+            line-height: 1.5;
+            font-size: 14px;
         }
 
         .message.user .message-content {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #4f46e5;
             color: white;
-            border-radius: 12px 12px 0 12px;
         }
 
         .message.assistant .message-content {
             background: white;
-            color: #333;
-            border: 1px solid #e0e0e0;
-            border-radius: 12px 12px 12px 0;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            color: #374151;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         }
 
         .sources {
-            margin-top: 8px;
-            padding: 8px;
-            background: #f0f0f0;
-            border-radius: 8px;
+            margin-top: 12px;
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 6px;
             font-size: 12px;
+            border-left: 3px solid #4f46e5;
+        }
+
+        .sources strong {
+            color: #111827;
+            display: block;
+            margin-bottom: 8px;
         }
 
         .source-item {
-            margin: 4px 0;
-            padding: 4px 8px;
+            margin: 6px 0;
+            padding: 6px 10px;
             background: white;
             border-radius: 4px;
-            border-left: 3px solid #667eea;
+            color: #6b7280;
+            border: 1px solid #e5e7eb;
+        }
+
+        .source-item strong {
+            color: #111827;
+            display: inline;
+            margin: 0;
         }
 
         .input-container {
-            padding: 20px;
+            padding: 20px 24px;
             background: white;
-            border-top: 1px solid #e0e0e0;
+            border-top: 1px solid #e5e7eb;
             display: flex;
-            gap: 10px;
+            gap: 12px;
         }
 
         .input-box {
             flex: 1;
-            padding: 12px 16px;
-            border: 2px solid #e0e0e0;
-            border-radius: 24px;
+            padding: 10px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
             font-size: 14px;
+            font-family: 'Inter', sans-serif;
             outline: none;
-            transition: border-color 0.3s;
+            transition: border-color 0.2s;
         }
 
         .input-box:focus {
-            border-color: #667eea;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
         }
 
         .send-button {
-            padding: 12px 24px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 10px 20px;
+            background: #4f46e5;
             color: white;
             border: none;
-            border-radius: 24px;
-            font-weight: 600;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 14px;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: background 0.2s;
         }
 
         .send-button:hover {
-            transform: scale(1.05);
+            background: #4338ca;
         }
 
         .send-button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
-            transform: none;
         }
 
         .loading {
             display: inline-block;
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
-            background: #667eea;
+            background: #4f46e5;
             animation: pulse 1.4s infinite ease-in-out;
         }
 
@@ -168,41 +205,35 @@
             40% { opacity: 1; }
         }
 
-        .clear-button {
-            padding: 8px 16px;
-            background: #ff4757;
-            color: white;
-            border: none;
-            border-radius: 16px;
-            font-size: 12px;
-            cursor: pointer;
-            margin-left: auto;
-        }
-
         .admin-link {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 12px 20px;
+            bottom: 24px;
+            right: 24px;
+            padding: 10px 18px;
             background: white;
-            color: #667eea;
+            color: #4f46e5;
             text-decoration: none;
-            border-radius: 24px;
-            font-weight: 600;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            transition: transform 0.2s;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s;
         }
 
         .admin-link:hover {
-            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
         }
     </style>
 </head>
 <body>
     <div class="chat-container">
         <div class="chat-header">
-            <h1>Neo AI Assistant</h1>
-            <p>Ask me anything about Neo's capabilities and use cases</p>
+            <div class="header-left">
+                <h1>Neo AI Assistant</h1>
+                <p>Ask me anything about Neo's capabilities and use cases</p>
+            </div>
             <button class="clear-button" onclick="clearChat()">Clear Chat</button>
         </div>
         <div class="messages-container" id="messages">
@@ -224,7 +255,7 @@
         </div>
     </div>
 
-    <a href="/admin" class="admin-link">Admin Panel</a>
+    <a href="/admin" class="admin-link">Admin Panel →</a>
 
     <script>
         const messagesContainer = document.getElementById('messages');
@@ -242,19 +273,15 @@
             const message = messageInput.value.trim();
             if (!message) return;
 
-            // Disable input
             messageInput.disabled = true;
             sendButton.disabled = true;
 
-            // Add user message
             addMessage(message, 'user');
             messageInput.value = '';
 
-            // Show loading
             const loadingDiv = addLoadingMessage();
 
             try {
-                // Call API
                 const response = await fetch('/api/chat', {
                     method: 'POST',
                     headers: {
@@ -267,11 +294,7 @@
                 });
 
                 const data = await response.json();
-
-                // Remove loading
                 loadingDiv.remove();
-
-                // Add assistant response
                 addMessage(data.response, 'assistant', data.sources);
 
             } catch (error) {
@@ -280,7 +303,6 @@
                 console.error('Error:', error);
             }
 
-            // Re-enable input
             messageInput.disabled = false;
             sendButton.disabled = false;
             messageInput.focus();
@@ -322,9 +344,9 @@
             messageDiv.innerHTML = `
                 <div class="message-content">
                     <span class="loading"></span>
-                    <span class="loading" style="animation-delay: 0.2s"></span>
-                    <span class="loading" style="animation-delay: 0.4s"></span>
-                    Thinking...
+                    <span class="loading" style="animation-delay: 0.2s; margin-left: 4px;"></span>
+                    <span class="loading" style="animation-delay: 0.4s; margin-left: 4px;"></span>
+                    <span style="margin-left: 8px;">Thinking...</span>
                 </div>
             `;
             messagesContainer.appendChild(messageDiv);
@@ -350,7 +372,6 @@
             }
         }
 
-        // Focus input on load
         messageInput.focus();
     </script>
 </body>

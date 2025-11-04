@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Neo Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -12,36 +13,68 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
             min-height: 100vh;
             padding: 40px 20px;
         }
 
-        .admin-container {
-            max-width: 800px;
+        .container {
+            max-width: 1200px;
             margin: 0 auto;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-            padding: 40px;
+        }
+
+        .header {
+            margin-bottom: 32px;
         }
 
         h1 {
-            color: #333;
-            margin-bottom: 10px;
+            color: #111827;
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
         }
 
         .subtitle {
-            color: #666;
-            margin-bottom: 30px;
+            color: #6b7280;
+            font-size: 15px;
         }
 
-        .upload-section {
-            background: #f7f9fc;
-            padding: 30px;
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background: white;
             border-radius: 12px;
-            margin-bottom: 30px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+        }
+
+        .card h2 {
+            color: #111827;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .info-box {
+            background: #eff6ff;
+            border-left: 3px solid #3b82f6;
+            padding: 14px 16px;
+            border-radius: 6px;
+            margin-bottom: 24px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .info-box strong {
+            color: #1e40af;
+            font-weight: 600;
         }
 
         .form-group {
@@ -50,32 +83,34 @@
 
         label {
             display: block;
-            font-weight: 600;
+            font-weight: 500;
             margin-bottom: 8px;
-            color: #333;
+            color: #374151;
+            font-size: 14px;
         }
 
         input[type="text"],
-        input[type="password"],
-        input[type="file"] {
+        input[type="password"] {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
             border-radius: 8px;
             font-size: 14px;
+            font-family: 'Inter', sans-serif;
             outline: none;
-            transition: border-color 0.3s;
+            transition: all 0.2s;
         }
 
         input[type="text"]:focus,
         input[type="password"]:focus {
-            border-color: #f5576c;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
         }
 
         .file-input-wrapper {
             position: relative;
             overflow: hidden;
-            display: inline-block;
+            display: block;
             width: 100%;
         }
 
@@ -86,73 +121,106 @@
 
         .file-input-label {
             display: block;
-            padding: 12px;
-            background: white;
-            border: 2px dashed #e0e0e0;
+            padding: 48px 20px;
+            background: #fafafa;
+            border: 2px dashed #d1d5db;
             border-radius: 8px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.2s;
+            color: #6b7280;
+            font-size: 14px;
         }
 
         .file-input-label:hover {
-            border-color: #f5576c;
-            background: #fff5f7;
+            border-color: #4f46e5;
+            background: #f5f3ff;
+            color: #4f46e5;
         }
 
         .file-name {
-            margin-top: 8px;
-            color: #666;
-            font-size: 14px;
+            margin-top: 12px;
+            color: #374151;
+            font-size: 13px;
+            font-weight: 500;
         }
 
         .upload-button {
             width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 12px;
+            background: #4f46e5;
             color: white;
             border: none;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: background 0.2s;
         }
 
         .upload-button:hover {
-            transform: translateY(-2px);
+            background: #4338ca;
         }
 
         .upload-button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
-            transform: none;
         }
 
-        .stats-section {
-            background: #f7f9fc;
-            padding: 30px;
-            border-radius: 12px;
-            margin-bottom: 20px;
+        .stats-container {
+            grid-column: span 2;
         }
 
-        .stats-section h2 {
-            color: #333;
-            margin-bottom: 20px;
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 20px;
         }
 
-        .stat-item {
-            padding: 12px;
-            background: white;
+        .stat-card {
+            background: #fafafa;
+            padding: 16px;
             border-radius: 8px;
-            margin-bottom: 10px;
-            border-left: 4px solid #f5576c;
+            border: 1px solid #e5e7eb;
+        }
+
+        .stat-label {
+            color: #6b7280;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            color: #111827;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .load-stats-button {
+            width: 100%;
+            padding: 10px;
+            background: white;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 20px;
+        }
+
+        .load-stats-button:hover {
+            background: #f9fafb;
+            border-color: #9ca3af;
         }
 
         .message {
             padding: 12px 16px;
             border-radius: 8px;
             margin-top: 16px;
+            font-size: 14px;
             animation: slideIn 0.3s ease-out;
         }
 
@@ -168,105 +236,131 @@
         }
 
         .message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
         }
 
         .message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
         }
 
         .back-link {
-            display: inline-block;
-            margin-top: 20px;
-            padding: 10px 20px;
-            background: #667eea;
-            color: white;
+            display: inline-flex;
+            align-items: center;
+            margin-top: 24px;
+            padding: 10px 18px;
+            background: white;
+            color: #4f46e5;
             text-decoration: none;
             border-radius: 8px;
-            transition: transform 0.2s;
+            font-weight: 500;
+            font-size: 14px;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s;
         }
 
         .back-link:hover {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             transform: translateY(-2px);
         }
 
-        .info-box {
-            background: #e3f2fd;
-            border-left: 4px solid #2196f3;
-            padding: 16px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-
-        .info-box strong {
-            color: #1976d2;
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            .stats-container {
+                grid-column: span 1;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="admin-container">
-        <h1>Neo Admin Panel</h1>
-        <p class="subtitle">Upload and manage knowledge base documents</p>
+    <div class="container">
+        <div class="header">
+            <h1>Neo Admin Panel</h1>
+            <p class="subtitle">Upload and manage knowledge base documents</p>
+        </div>
 
         <div class="info-box">
             <strong>Supported formats:</strong> Markdown (.md), Text (.txt), PDF (.pdf)<br>
             <strong>Default password:</strong> neo-admin-2024
         </div>
 
-        <div class="upload-section">
-            <h2>Upload Document</h2>
-            <form id="uploadForm">
-                <div class="form-group">
-                    <label for="documentName">Document Name (optional)</label>
-                    <input
-                        type="text"
-                        id="documentName"
-                        placeholder="e.g., Shell Authentication Guide"
-                    >
-                </div>
-
-                <div class="form-group">
-                    <label for="fileInput">Select File</label>
-                    <div class="file-input-wrapper">
-                        <label class="file-input-label" for="fileInput">
-                            Click to choose file or drag and drop
-                        </label>
-                        <input type="file" id="fileInput" accept=".md,.txt,.pdf">
+        <div class="grid">
+            <!-- Upload Document Card -->
+            <div class="card">
+                <h2>Upload Document</h2>
+                <form id="uploadForm">
+                    <div class="form-group">
+                        <label for="documentName">Document Name (optional)</label>
+                        <input
+                            type="text"
+                            id="documentName"
+                            placeholder="e.g., Shell Authentication Guide"
+                        >
                     </div>
-                    <div class="file-name" id="fileName"></div>
-                </div>
 
-                <div class="form-group">
-                    <label for="password">Admin Password</label>
-                    <input
-                        type="password"
-                        id="password"
-                        placeholder="Enter admin password"
-                        required
-                    >
-                </div>
+                    <div class="form-group">
+                        <label for="fileInput">Select File</label>
+                        <div class="file-input-wrapper">
+                            <label class="file-input-label" for="fileInput">
+                                📄 Click to choose file or drag and drop
+                            </label>
+                            <input type="file" id="fileInput" accept=".md,.txt,.pdf">
+                        </div>
+                        <div class="file-name" id="fileName"></div>
+                    </div>
 
-                <button type="submit" class="upload-button" id="uploadButton">
-                    Upload Document
+                    <div class="form-group">
+                        <label for="password">Admin Password</label>
+                        <input
+                            type="password"
+                            id="password"
+                            placeholder="Enter admin password"
+                            required
+                        >
+                    </div>
+
+                    <button type="submit" class="upload-button" id="uploadButton">
+                        Upload Document
+                    </button>
+                </form>
+
+                <div id="message"></div>
+            </div>
+
+            <!-- Knowledge Base Stats Card -->
+            <div class="card">
+                <h2>Knowledge Base Stats</h2>
+                <button class="load-stats-button" onclick="loadStats()">
+                    Load Statistics
                 </button>
-            </form>
-
-            <div id="message"></div>
+                <div id="stats">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Total Vectors</div>
+                            <div class="stat-value" id="totalVectors">--</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Status</div>
+                            <div class="stat-value" style="font-size: 18px;" id="status">Ready</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Database</div>
+                            <div class="stat-value" style="font-size: 18px;">Pinecone</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="stats-section">
-            <h2>Knowledge Base Stats</h2>
-            <button class="upload-button" onclick="loadStats()" style="margin-bottom: 20px;">
-                Load Statistics
-            </button>
-            <div id="stats"></div>
-        </div>
-
-        <a href="/chat" class="back-link">Back to Chat</a>
+        <a href="/chat" class="back-link">← Back to Chat</a>
     </div>
 
     <script>
@@ -276,7 +370,6 @@
         const uploadButton = document.getElementById('uploadButton');
         const messageDiv = document.getElementById('message');
 
-        // File input change handler
         fileInput.addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
                 fileName.textContent = `Selected: ${e.target.files[0].name}`;
@@ -285,7 +378,6 @@
             }
         });
 
-        // Form submit handler
         uploadForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -298,7 +390,6 @@
             const password = document.getElementById('password').value;
             const documentName = document.getElementById('documentName').value;
 
-            // Create form data
             const formData = new FormData();
             formData.append('file', file);
             formData.append('password', password);
@@ -306,7 +397,6 @@
                 formData.append('document_name', documentName);
             }
 
-            // Disable button
             uploadButton.disabled = true;
             uploadButton.textContent = 'Uploading...';
 
@@ -323,7 +413,6 @@
                         `Success! ${data.message}. Created ${data.chunks_created} chunks.`,
                         'success'
                     );
-                    // Reset form
                     uploadForm.reset();
                     fileName.textContent = '';
                 } else {
@@ -332,6 +421,7 @@
 
             } catch (error) {
                 showMessage(`Error: ${error.message}`, 'error');
+                console.error('Full error:', error);
             } finally {
                 uploadButton.disabled = false;
                 uploadButton.textContent = 'Upload Document';
@@ -354,27 +444,26 @@
                 return;
             }
 
-            const statsDiv = document.getElementById('stats');
-            statsDiv.innerHTML = 'Loading...';
+            document.getElementById('totalVectors').textContent = 'Loading...';
+            document.getElementById('status').textContent = 'Loading...';
 
             try {
-                const response = await fetch(`/api/admin/documents?password=${password}`);
+                const response = await fetch(`/api/admin/documents?password=${encodeURIComponent(password)}`);
                 const data = await response.json();
 
                 if (response.ok) {
-                    statsDiv.innerHTML = `
-                        <div class="stat-item">
-                            <strong>Total Vectors:</strong> ${data.stats.total_vectors || 0}
-                        </div>
-                        <div class="stat-item">
-                            <strong>Status:</strong> Active
-                        </div>
-                    `;
+                    document.getElementById('totalVectors').textContent = data.stats.total_vectors || 0;
+                    document.getElementById('status').textContent = 'Active';
                 } else {
-                    statsDiv.innerHTML = `<div class="message error">${data.detail}</div>`;
+                    document.getElementById('totalVectors').textContent = 'Error';
+                    document.getElementById('status').textContent = 'Error';
+                    showMessage(data.detail, 'error');
                 }
             } catch (error) {
-                statsDiv.innerHTML = `<div class="message error">Error loading stats</div>`;
+                document.getElementById('totalVectors').textContent = 'Error';
+                document.getElementById('status').textContent = 'Error';
+                showMessage('Error loading stats', 'error');
+                console.error('Error:', error);
             }
         }
     </script>
