@@ -298,15 +298,73 @@
             font-weight: 600;
         }
 
+        /* Responsive design for mobile and tablets */
         @media (max-width: 768px) {
+            body {
+                padding: 20px 10px;
+            }
+
+            .logo {
+                height: 48px;
+                top: 10px;
+                left: 10px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .subtitle {
+                font-size: 14px;
+            }
+
             .grid {
                 grid-template-columns: 1fr;
+                gap: 16px;
             }
+
             .stats-container {
                 grid-column: span 1;
             }
+
             .stats-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .card h2 {
+                font-size: 16px;
+            }
+
+            .info-box {
+                font-size: 12px;
+                padding: 12px 14px;
+            }
+
+            .message {
+                font-size: 13px;
+                padding: 10px 14px;
+            }
+
+            .info-banner {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo {
+                height: 40px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+
+            .card {
+                padding: 16px;
             }
         }
     </style>

@@ -126,33 +126,68 @@
         }
 
         .sources {
-            margin-top: 12px;
+            display: none; /* Hide sources section */
+        }
+
+        /* Markdown styling for LLM responses */
+        .message-content p {
+            margin-bottom: 12px;
+        }
+
+        .message-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        .message-content strong {
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .message-content em {
+            font-style: italic;
+        }
+
+        .message-content ul, .message-content ol {
+            margin: 8px 0 12px 20px;
+        }
+
+        .message-content li {
+            margin-bottom: 4px;
+        }
+
+        .message-content code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        .message-content pre {
+            background: #1f2937;
+            color: #f9fafb;
             padding: 12px;
-            background: #f9fafb;
             border-radius: 6px;
-            font-size: 12px;
-            border-left: 3px solid #4f46e5;
+            overflow-x: auto;
+            margin: 8px 0;
         }
 
-        .sources strong {
-            color: #111827;
-            display: block;
-            margin-bottom: 8px;
+        .message-content pre code {
+            background: transparent;
+            color: inherit;
+            padding: 0;
         }
 
-        .source-item {
-            margin: 6px 0;
-            padding: 6px 10px;
-            background: white;
-            border-radius: 4px;
+        .message-content a {
+            color: #4f46e5;
+            text-decoration: underline;
+        }
+
+        .message-content blockquote {
+            border-left: 3px solid #d1d5db;
+            padding-left: 12px;
+            margin: 8px 0;
             color: #6b7280;
-            border: 1px solid #e5e7eb;
-        }
-
-        .source-item strong {
-            color: #111827;
-            display: inline;
-            margin: 0;
         }
 
         .input-container {
@@ -214,10 +249,17 @@
             40% { opacity: 1; }
         }
 
-        .admin-link {
+        .nav-links {
             position: fixed;
             bottom: 24px;
             right: 24px;
+            display: flex;
+            gap: 12px;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .nav-link {
             padding: 10px 18px;
             background: white;
             color: #4f46e5;
@@ -230,14 +272,14 @@
             transition: all 0.2s;
         }
 
-        .admin-link:hover {
+        .nav-link:hover {
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
             transform: translateY(-2px);
         }
 
         .info-banner {
             position: fixed;
-            bottom: 80px;
+            bottom: 140px;
             right: 24px;
             max-width: 260px;
             padding: 10px 14px;
@@ -255,6 +297,91 @@
         .info-banner strong {
             color: #a16207;
             font-weight: 600;
+        }
+
+        /* Responsive design for mobile and tablets */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .logo {
+                height: 48px;
+                top: 10px;
+                left: 10px;
+            }
+
+            .chat-container {
+                height: 95vh;
+                border-radius: 8px;
+            }
+
+            .chat-header {
+                padding: 16px;
+            }
+
+            .header-left h1 {
+                font-size: 18px;
+            }
+
+            .header-left p {
+                font-size: 13px;
+            }
+
+            .clear-button {
+                padding: 6px 12px;
+                font-size: 13px;
+            }
+
+            .messages-container {
+                padding: 16px;
+            }
+
+            .message-content {
+                max-width: 85%;
+                font-size: 13px;
+                padding: 10px 14px;
+            }
+
+            .input-container {
+                padding: 12px 16px;
+                gap: 8px;
+            }
+
+            .input-box {
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+
+            .send-button {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+
+            .nav-links {
+                bottom: 16px;
+                right: 16px;
+                gap: 8px;
+            }
+
+            .nav-link {
+                padding: 8px 14px;
+                font-size: 13px;
+            }
+
+            .info-banner {
+                display: none; /* Hide info banner on mobile */
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo {
+                height: 40px;
+            }
+
+            .message-content {
+                max-width: 90%;
+            }
         }
     </style>
 </head>
@@ -288,11 +415,17 @@
         </div>
     </div>
 
-    <a href="/admin" class="admin-link">Admin Panel →</a>
+    <div class="nav-links">
+        <a href="/" class="nav-link">← Home</a>
+        <a href="/admin" class="nav-link">Admin Panel →</a>
+    </div>
 
     <div class="info-banner">
         <strong>⚠️ Getting errors?</strong> Please screenshot & send to <strong>Naresh Silla</strong> via Slack/email.
     </div>
+
+    <!-- Markdown parser -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@11.0.0/marked.min.js"></script>
 
     <script>
         const messagesContainer = document.getElementById('messages');
@@ -351,8 +484,15 @@
 
             const contentDiv = document.createElement('div');
             contentDiv.className = 'message-content';
-            contentDiv.textContent = content;
 
+            // Render markdown for assistant messages, plain text for user messages
+            if (type === 'assistant') {
+                contentDiv.innerHTML = marked.parse(content);
+            } else {
+                contentDiv.textContent = content;
+            }
+
+            // Sources are hidden via CSS, but keeping the logic for potential future use
             if (sources && sources.length > 0) {
                 const sourcesDiv = document.createElement('div');
                 sourcesDiv.className = 'sources';

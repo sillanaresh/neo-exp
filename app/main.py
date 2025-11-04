@@ -42,9 +42,15 @@ class ChatResponse(BaseModel):
     sources: list
     session_id: str
 
-# Health check
-@app.get("/")
-async def root():
+# Landing page
+@app.get("/", response_class=HTMLResponse)
+async def landing_page():
+    """Serve the landing page"""
+    return FileResponse(STATIC_DIR / "index.html")
+
+# Health check API
+@app.get("/api/health")
+async def health_check():
     return {"status": "ok", "message": "Neo RAG Chatbot API"}
 
 # Chat endpoint
