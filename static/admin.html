@@ -308,6 +308,77 @@
             transform: translateY(-2px);
         }
 
+        /* Document Preview */
+        .file-preview {
+            display: none;
+            margin-top: 12px;
+            padding: 14px;
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-left: 3px solid #0284c7;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .file-preview.show {
+            display: block;
+        }
+
+        .file-preview-item {
+            margin: 6px 0;
+            color: #0c4a6e;
+        }
+
+        .file-preview-item strong {
+            color: #075985;
+            font-weight: 600;
+        }
+
+        .preview-text {
+            margin-top: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+            font-family: 'Monaco', monospace;
+            font-size: 12px;
+            color: #374151;
+            max-height: 120px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        /* Upload Progress */
+        .upload-progress {
+            display: none;
+            margin-top: 12px;
+        }
+
+        .upload-progress.show {
+            display: block;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4f46e5, #6366f1);
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+
+        .progress-text {
+            margin-top: 6px;
+            font-size: 13px;
+            color: #6b7280;
+            text-align: center;
+        }
+
         /* Responsive design for mobile and tablets */
         @media (max-width: 768px) {
             body {
@@ -441,6 +512,22 @@
                             <input type="file" id="fileInput" accept=".md,.txt,.pdf">
                         </div>
                         <div class="file-name" id="fileName"></div>
+
+                        <!-- File Preview -->
+                        <div class="file-preview" id="filePreview">
+                            <div class="file-preview-item"><strong>Size:</strong> <span id="previewSize"></span></div>
+                            <div class="file-preview-item"><strong>Estimated chunks:</strong> <span id="previewChunks"></span></div>
+                            <div class="file-preview-item"><strong>Preview:</strong></div>
+                            <div class="preview-text" id="previewText"></div>
+                        </div>
+
+                        <!-- Upload Progress -->
+                        <div class="upload-progress" id="uploadProgress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                            </div>
+                            <div class="progress-text" id="progressText">Uploading... 0%</div>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -513,11 +600,39 @@
         const messageDiv = document.getElementById('message');
         const statsMessageDiv = document.getElementById('statsMessage');
 
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                fileName.textContent = `Selected: ${e.target.files[0].name}`;
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                fileName.textContent = `Selected: ${file.name}`;
+
+                // Show file preview
+                const preview = document.getElementById('filePreview');
+                const sizeKB = (file.size / 1024).toFixed(2);
+                const sizeMB = sizeKB > 1024 ? (sizeKB / 1024).toFixed(2) + ' MB' : sizeKB + ' KB';
+                document.getElementById('previewSize').textContent = sizeMB;
+
+                // Estimate chunks (rough: 2000 tokens ≈ 8000 chars ≈ 1500 words)
+                const estimatedChunks = Math.ceil(file.size / 8000);
+                document.getElementById('previewChunks').textContent = `~${estimatedChunks} chunk${estimatedChunks !== 1 ? 's' : ''}`;
+
+                // Read and show first 500 characters
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const text = event.target.result;
+                    const preview_text = text.substring(0, 500) + (text.length > 500 ? '...' : '');
+                    document.getElementById('previewText').textContent = preview_text;
+                };
+
+                if (file.type === 'application/pdf') {
+                    document.getElementById('previewText').textContent = '[PDF Preview not available - will be processed on upload]';
+                } else {
+                    reader.readAsText(file);
+                }
+
+                preview.classList.add('show');
             } else {
                 fileName.textContent = '';
+                document.getElementById('filePreview').classList.remove('show');
             }
         });
 
@@ -526,7 +641,7 @@
 
             const file = fileInput.files[0];
             if (!file) {
-                showMessage('Please select a file', 'error');
+                showMessage('Please select a file to upload', 'error', true);
                 return;
             }
 
@@ -543,27 +658,63 @@
             uploadButton.disabled = true;
             uploadButton.textContent = 'Uploading...';
 
+            // Show progress bar
+            const progress = document.getElementById('uploadProgress');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            progress.classList.add('show');
+
+            // Simulate progress (since we can't track real progress with FormData)
+            let simulatedProgress = 0;
+            const progressInterval = setInterval(() => {
+                if (simulatedProgress < 90) {
+                    simulatedProgress += 10;
+                    progressFill.style.width = simulatedProgress + '%';
+                    progressText.textContent = `Processing... ${simulatedProgress}%`;
+                }
+            }, 200);
+
             try {
                 const response = await fetch('/api/admin/upload', {
                     method: 'POST',
                     body: formData
                 });
 
+                clearInterval(progressInterval);
+                progressFill.style.width = '100%';
+                progressText.textContent = 'Complete! 100%';
+
                 const data = await response.json();
 
                 if (response.ok) {
                     showMessage(
-                        `Success! ${data.message}. Created ${data.chunks_created} chunks.`,
+                        `✓ Success! ${data.message}. Created ${data.chunks_created} chunks.`,
                         'success'
                     );
                     uploadForm.reset();
                     fileName.textContent = '';
+                    document.getElementById('filePreview').classList.remove('show');
+
+                    // Hide progress after 1 second
+                    setTimeout(() => {
+                        progress.classList.remove('show');
+                        progressFill.style.width = '0%';
+                    }, 1000);
                 } else {
-                    showMessage(`Error: ${data.detail}`, 'error');
+                    const errorMsg = data.detail || 'Upload failed';
+                    showMessage(errorMsg, 'error', true);
+                    progress.classList.remove('show');
                 }
 
             } catch (error) {
-                showMessage(`Error: ${error.message}`, 'error');
+                clearInterval(progressInterval);
+                progress.classList.remove('show');
+
+                const friendlyError = error.message.includes('Failed to fetch')
+                    ? 'Network error - please check your connection and try again'
+                    : `Upload failed: ${error.message}`;
+
+                showMessage(friendlyError, 'error', true);
                 console.error('Full error:', error);
             } finally {
                 uploadButton.disabled = false;
@@ -571,10 +722,24 @@
             }
         });
 
-        function showMessage(text, type) {
+        function showMessage(text, type, showRetry = false) {
             messageDiv.className = `message ${type}`;
             messageDiv.textContent = text;
-            // Don't auto-hide errors - user needs to see them
+
+            // Add retry button for errors
+            if (type === 'error' && showRetry) {
+                const retryBtn = document.createElement('button');
+                retryBtn.textContent = 'Retry Upload';
+                retryBtn.style.cssText = 'margin-left: 12px; padding: 6px 12px; background: #4f46e5; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 13px;';
+                retryBtn.onclick = () => {
+                    messageDiv.className = '';
+                    messageDiv.textContent = '';
+                    uploadButton.click();
+                };
+                messageDiv.appendChild(retryBtn);
+            }
+
+            // Auto-hide success messages
             if (type !== 'error') {
                 setTimeout(() => {
                     messageDiv.className = '';
