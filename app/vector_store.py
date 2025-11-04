@@ -111,10 +111,9 @@ class VectorStore:
 
     def list_documents(self) -> dict:
         """List all unique documents in the index"""
-        # Query with a dummy vector to get some results
         stats = self.index.describe_index_stats()
 
-        # Extract only the data we need, avoiding complex objects
+        # Extract total vectors
         total_count = stats.total_vector_count if hasattr(stats, 'total_vector_count') else 0
 
         # Convert namespaces to simple dict
@@ -126,9 +125,38 @@ class VectorStore:
                 else:
                     namespaces_data[ns_name] = 0
 
+        # Get unique document names by querying with dummy vector
+        # Create a dummy query to fetch some results
+        try:
+            dummy_query = [0.0] * 1536  # Empty embedding
+            results = self.index.query(
+                vector=dummy_query,
+                top_k=10000,  # Get many results to find all unique docs
+                include_metadata=True
+            )
+
+            # Extract unique document names
+            document_names = set()
+            document_chunks = {}
+            for match in results.matches:
+                doc_name = match.metadata.get('document_name', 'Unknown')
+                document_names.add(doc_name)
+                # Count chunks per document
+                document_chunks[doc_name] = document_chunks.get(doc_name, 0) + 1
+
+            # Convert to sorted list with chunk counts
+            documents_list = [
+                {'name': name, 'chunks': document_chunks.get(name, 0)}
+                for name in sorted(document_names)
+            ]
+        except Exception as e:
+            print(f"Error fetching document list: {e}")
+            documents_list = []
+
         return {
             'total_vectors': total_count,
-            'namespaces': namespaces_data
+            'namespaces': namespaces_data,
+            'documents': documents_list
         }
 
     def delete_document(self, document_name: str):

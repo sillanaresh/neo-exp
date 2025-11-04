@@ -379,6 +379,31 @@
             text-align: center;
         }
 
+        /* Documents List */
+        .document-item {
+            padding: 12px 14px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .document-name {
+            color: #374151;
+            font-weight: 500;
+            flex: 1;
+        }
+
+        .document-chunks {
+            color: #6b7280;
+            font-size: 13px;
+            padding-left: 12px;
+        }
+
         /* Responsive design for mobile and tablets */
         @media (max-width: 768px) {
             body {
@@ -583,6 +608,12 @@
                             <div class="stat-value" style="font-size: 18px;">Pinecone</div>
                         </div>
                     </div>
+
+                    <!-- Documents List -->
+                    <div id="documentsList" style="display: none; margin-top: 24px;">
+                        <h3 style="font-size: 16px; color: #111827; margin-bottom: 12px;">Uploaded Documents</h3>
+                        <div id="documentsContainer"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -781,6 +812,20 @@
                 if (response.ok) {
                     document.getElementById('totalVectors').textContent = data.stats.total_vectors || '0';
                     document.getElementById('status').textContent = 'Ready';
+
+                    // Display documents list
+                    const documents = data.stats.documents || [];
+                    if (documents.length > 0) {
+                        const documentsContainer = document.getElementById('documentsContainer');
+                        documentsContainer.innerHTML = documents.map(doc => `
+                            <div class="document-item">
+                                <div class="document-name">📄 ${doc.name}</div>
+                                <div class="document-chunks">${doc.chunks} chunk${doc.chunks !== 1 ? 's' : ''}</div>
+                            </div>
+                        `).join('');
+                        document.getElementById('documentsList').style.display = 'block';
+                    }
+
                     showStatsMessage('Statistics loaded successfully', 'success');
                 } else {
                     document.getElementById('totalVectors').textContent = 'Error';
