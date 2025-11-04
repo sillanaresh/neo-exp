@@ -131,6 +131,32 @@
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         }
 
+        /* Suggested questions */
+        .suggested-questions {
+            margin-top: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .suggested-question-btn {
+            padding: 10px 14px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            text-align: left;
+            cursor: pointer;
+            font-size: 13px;
+            color: #4b5563;
+            transition: all 0.2s;
+        }
+
+        .suggested-question-btn:hover {
+            background: #f3f4f6;
+            border-color: #4f46e5;
+            color: #4f46e5;
+        }
+
         .sources {
             display: none; /* Hide sources section */
         }
@@ -176,12 +202,36 @@
             border-radius: 6px;
             overflow-x: auto;
             margin: 8px 0;
+            position: relative;
         }
 
         .message-content pre code {
             background: transparent;
             color: inherit;
             padding: 0;
+        }
+
+        .copy-code-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            padding: 4px 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #f9fafb;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .copy-code-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .copy-code-btn.copied {
+            background: #10b981;
+            border-color: #10b981;
         }
 
         .message-content a {
@@ -294,6 +344,80 @@
         .info-banner strong {
             color: #a16207;
             font-weight: 600;
+        }
+
+        /* Warning Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 400px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-content h3 {
+            color: #111827;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .modal-content p {
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .modal-btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .modal-btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .modal-btn-primary {
+            background: #4f46e5;
+            color: white;
+        }
+
+        .modal-btn-primary:hover {
+            background: #4338ca;
         }
 
         /* Responsive design for mobile and tablets */
@@ -415,11 +539,7 @@
             <button class="clear-button" onclick="clearChat()">Clear Chat</button>
         </div>
         <div class="messages-container" id="messages">
-            <div class="message assistant">
-                <div class="message-content">
-                    Hello! I'm the Neo AI Assistant. I can help you understand what's possible with Neo based on real implementations from various brands. Ask me about features, use cases, or specific requirements!
-                </div>
-            </div>
+            <!-- Messages will be loaded from localStorage or default welcome -->
         </div>
         <div class="input-container">
             <input
@@ -439,6 +559,18 @@
         <strong>⚠️ Getting errors?</strong> Please screenshot & send to <strong>Naresh Silla</strong> via Slack/email.
     </div>
 
+    <!-- Warning Modal -->
+    <div id="navigationModal" class="modal">
+        <div class="modal-content">
+            <h3>Leave chat?</h3>
+            <p>Your conversation history will be saved locally. You can continue where you left off when you return to this page.</p>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-secondary" onclick="cancelNavigation()">Stay</button>
+                <button class="modal-btn modal-btn-primary" onclick="confirmNavigation()">Continue</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Markdown parser -->
     <script src="https://cdn.jsdelivr.net/npm/marked@11.0.0/marked.min.js"></script>
 
@@ -446,12 +578,106 @@
         const messagesContainer = document.getElementById('messages');
         const messageInput = document.getElementById('messageInput');
         const sendButton = document.getElementById('sendButton');
-        let sessionId = 'session_' + Date.now();
+
+        // Session persistence with localStorage
+        const STORAGE_KEY = 'neo_chat_history';
+        const SESSION_KEY = 'neo_session_id';
+        let sessionId = localStorage.getItem(SESSION_KEY) || 'session_' + Date.now();
+        localStorage.setItem(SESSION_KEY, sessionId);
+
+        // Suggested questions
+        const suggestedQuestions = [
+            "How does Neo handle OAuth authentication?",
+            "Show me examples of workflow integrations",
+            "What are Neo's API capabilities?"
+        ];
+
+        // Navigation warning
+        let pendingHref = null;
+
+        // Load chat history on page load
+        window.addEventListener('DOMContentLoaded', loadChatHistory);
+
+        // Save history before leaving
+        window.addEventListener('beforeunload', saveChatHistory);
+
+        // Intercept admin panel navigation
+        document.querySelector('a[href="/admin"]').addEventListener('click', function(e) {
+            e.preventDefault();
+            pendingHref = this.href;
+            document.getElementById('navigationModal').classList.add('show');
+        });
 
         function handleKeyPress(event) {
             if (event.key === 'Enter') {
                 sendMessage();
             }
+        }
+
+        function cancelNavigation() {
+            document.getElementById('navigationModal').classList.remove('show');
+            pendingHref = null;
+        }
+
+        function confirmNavigation() {
+            saveChatHistory();
+            if (pendingHref) {
+                window.location.href = pendingHref;
+            }
+        }
+
+        function loadChatHistory() {
+            const savedHistory = localStorage.getItem(STORAGE_KEY);
+            if (savedHistory) {
+                try {
+                    const messages = JSON.parse(savedHistory);
+                    messages.forEach(msg => {
+                        addMessage(msg.content, msg.type, null, false); // false = don't save again
+                    });
+                } catch (e) {
+                    console.error('Error loading history:', e);
+                    showWelcomeMessage();
+                }
+            } else {
+                showWelcomeMessage();
+            }
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function showWelcomeMessage() {
+            const welcomeHTML = `
+                <div class="message assistant">
+                    <div class="message-content">
+                        Hello! I'm the Neo AI Assistant. I can help you understand what's possible with Neo based on real implementations from various brands.
+                        <div class="suggested-questions">
+                            ${suggestedQuestions.map(q => `
+                                <button class="suggested-question-btn" onclick="askSuggestedQuestion('${q.replace(/'/g, "\\'")}')">
+                                    ${q}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+            messagesContainer.innerHTML = welcomeHTML;
+        }
+
+        function askSuggestedQuestion(question) {
+            messageInput.value = question;
+            sendMessage();
+        }
+
+        function saveChatHistory() {
+            const messages = [];
+            document.querySelectorAll('.message').forEach(msg => {
+                const type = msg.classList.contains('user') ? 'user' : 'assistant';
+                const content = msg.querySelector('.message-content').textContent.trim();
+                // Don't save suggested questions
+                if (!content.includes('How does Neo handle') && content.length > 0) {
+                    messages.push({ type, content });
+                }
+            });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
         }
 
         async function sendMessage() {
@@ -478,22 +704,42 @@
                     })
                 });
 
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+
                 const data = await response.json();
                 loadingDiv.remove();
                 addMessage(data.response, 'assistant', data.sources);
 
             } catch (error) {
                 loadingDiv.remove();
-                addMessage('Sorry, there was an error processing your request.', 'assistant');
+                const errorMsg = error.message.includes('Failed to fetch')
+                    ? 'Network error - please check your connection and try again.'
+                    : `Sorry, there was an error: ${error.message}`;
+
+                const errorDiv = addMessage(errorMsg, 'assistant', null, false);
+
+                // Add retry button
+                const retryBtn = document.createElement('button');
+                retryBtn.textContent = 'Retry';
+                retryBtn.style.cssText = 'margin-top: 8px; padding: 6px 12px; background: #4f46e5; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 13px;';
+                retryBtn.onclick = () => {
+                    messageInput.value = message;
+                    sendMessage();
+                };
+                errorDiv.querySelector('.message-content').appendChild(retryBtn);
+
                 console.error('Error:', error);
             }
 
             messageInput.disabled = false;
             sendButton.disabled = false;
             messageInput.focus();
+            saveChatHistory(); // Save after each message
         }
 
-        function addMessage(content, type, sources = null) {
+        function addMessage(content, type, sources = null, shouldSave = true) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${type}`;
 
@@ -503,6 +749,27 @@
             // Render markdown for assistant messages, plain text for user messages
             if (type === 'assistant') {
                 contentDiv.innerHTML = marked.parse(content);
+
+                // Add copy buttons to code blocks
+                setTimeout(() => {
+                    contentDiv.querySelectorAll('pre').forEach(pre => {
+                        const copyBtn = document.createElement('button');
+                        copyBtn.className = 'copy-code-btn';
+                        copyBtn.textContent = 'Copy';
+                        copyBtn.onclick = function() {
+                            const code = pre.querySelector('code')?.textContent || pre.textContent;
+                            navigator.clipboard.writeText(code).then(() => {
+                                copyBtn.textContent = 'Copied!';
+                                copyBtn.classList.add('copied');
+                                setTimeout(() => {
+                                    copyBtn.textContent = 'Copy';
+                                    copyBtn.classList.remove('copied');
+                                }, 2000);
+                            });
+                        };
+                        pre.appendChild(copyBtn);
+                    });
+                }, 0);
             } else {
                 contentDiv.textContent = content;
             }
@@ -527,6 +794,10 @@
             messagesContainer.appendChild(messageDiv);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
+            if (shouldSave) {
+                saveChatHistory();
+            }
+
             return messageDiv;
         }
 
@@ -547,17 +818,13 @@
         }
 
         async function clearChat() {
-            if (confirm('Are you sure you want to clear this conversation?')) {
+            if (confirm('Are you sure you want to clear this conversation? This will delete your local history.')) {
                 try {
                     await fetch(`/api/clear/${sessionId}`, { method: 'POST' });
-                    messagesContainer.innerHTML = `
-                        <div class="message assistant">
-                            <div class="message-content">
-                                Conversation cleared. How can I help you?
-                            </div>
-                        </div>
-                    `;
                     sessionId = 'session_' + Date.now();
+                    localStorage.setItem(SESSION_KEY, sessionId);
+                    localStorage.removeItem(STORAGE_KEY);
+                    showWelcomeMessage();
                 } catch (error) {
                     console.error('Error clearing chat:', error);
                 }
