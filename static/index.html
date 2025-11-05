@@ -29,6 +29,37 @@
             height: 96px;
             width: auto;
             z-index: 1000;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .logo:hover {
+            opacity: 0.8;
+        }
+
+        /* Sparkle animation */
+        .sparkle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: radial-gradient(circle, #fbbf24 0%, #f59e0b 50%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: sparkle-float 2s ease-out forwards;
+        }
+
+        @keyframes sparkle-float {
+            0% {
+                transform: translate(0, 0) scale(0);
+                opacity: 1;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--tx), var(--ty)) scale(1);
+                opacity: 0;
+            }
         }
 
         .container {
@@ -198,7 +229,7 @@
     </style>
 </head>
 <body>
-    <img src="/static/neo-logo.png" alt="Neo" class="logo">
+    <img src="/static/neo-logo.png" alt="Neo" class="logo" id="logoImg">
 
     <div class="container">
         <div class="header">
@@ -222,5 +253,36 @@
             </a>
         </div>
     </div>
+
+    <script>
+        // Sparkle animation on logo click
+        document.getElementById('logoImg').addEventListener('click', function(e) {
+            const logo = e.target;
+            const rect = logo.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+
+            // Create 12 sparkles
+            for (let i = 0; i < 12; i++) {
+                const sparkle = document.createElement('div');
+                sparkle.className = 'sparkle';
+
+                const angle = (i * 30) * Math.PI / 180;
+                const distance = 40 + Math.random() * 30;
+                const tx = Math.cos(angle) * distance;
+                const ty = Math.sin(angle) * distance;
+
+                sparkle.style.cssText = `
+                    left: ${centerX}px;
+                    top: ${centerY}px;
+                    --tx: ${tx}px;
+                    --ty: ${ty}px;
+                `;
+
+                document.body.appendChild(sparkle);
+                setTimeout(() => sparkle.remove(), 2000);
+            }
+        });
+    </script>
 </body>
 </html>
