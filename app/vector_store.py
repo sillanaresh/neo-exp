@@ -155,6 +155,7 @@ class VectorStore:
 
         return {
             'total_vectors': total_count,
+            'total_files': len(documents_list),
             'namespaces': namespaces_data,
             'documents': documents_list
         }

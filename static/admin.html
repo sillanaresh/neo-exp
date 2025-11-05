@@ -611,6 +611,10 @@
                             <div class="stat-value" id="totalVectors">--</div>
                         </div>
                         <div class="stat-card">
+                            <div class="stat-label">Total Files</div>
+                            <div class="stat-value" id="totalFiles">--</div>
+                        </div>
+                        <div class="stat-card">
                             <div class="stat-label">Status</div>
                             <div class="stat-value" style="font-size: 18px;" id="status">Ready</div>
                         </div>
@@ -623,7 +627,7 @@
                     <!-- Documents List -->
                     <div id="documentsList" style="display: none; margin-top: 24px;">
                         <h3 style="font-size: 16px; color: #111827; margin-bottom: 12px;">Uploaded Documents</h3>
-                        <div id="documentsContainer"></div>
+                        <div id="documentsContainer" style="max-height: 400px; overflow-y: auto;"></div>
                     </div>
                 </div>
             </div>
@@ -673,6 +677,7 @@
             if (validFiles.length > 0) {
                 let filesHTML = '<div style="background: #f9fafb; padding: 12px; border-radius: 8px; border: 1px solid #e5e7eb;">';
                 filesHTML += `<div style="font-weight: 600; margin-bottom: 8px; color: #111827;">Selected Files (${validFiles.length}):</div>`;
+                filesHTML += '<div style="max-height: 200px; overflow-y: auto; padding-right: 8px;">';
 
                 validFiles.forEach(file => {
                     const fileExt = file.name.split('.').pop().toLowerCase();
@@ -683,7 +688,7 @@
                     filesHTML += `<div style="padding: 6px 0; color: #374151; font-size: 14px;">${icon} ${file.name} <span style="color: #9ca3af;">(${sizeStr})</span></div>`;
                 });
 
-                filesHTML += '</div>';
+                filesHTML += '</div></div>';
                 filesList.innerHTML = filesHTML;
                 filesList.style.display = 'block';
                 fileName.textContent = `${validFiles.length} file${validFiles.length !== 1 ? 's' : ''} selected`;
@@ -787,6 +792,10 @@
             progressFill.style.width = '100%';
             progressText.textContent = `Completed: ${successfulUploads.length} of ${totalFiles}`;
 
+            // Re-enable button immediately
+            uploadButton.disabled = false;
+            uploadButton.textContent = 'Upload Documents';
+
             // Show results summary
             let resultMessage = '';
             if (successfulUploads.length === totalFiles) {
@@ -819,9 +828,6 @@
                 progress.classList.remove('show');
                 progressFill.style.width = '0%';
             }, 2000);
-
-            uploadButton.disabled = false;
-            uploadButton.textContent = 'Upload Documents';
         });
 
         function showMessage(text, type, showRetry = false) {
@@ -874,6 +880,7 @@
             statsMessageDiv.textContent = '';
 
             document.getElementById('totalVectors').textContent = 'Loading...';
+            document.getElementById('totalFiles').textContent = 'Loading...';
             document.getElementById('status').textContent = 'Loading...';
 
             try {
@@ -882,6 +889,7 @@
 
                 if (response.ok) {
                     document.getElementById('totalVectors').textContent = data.stats.total_vectors || '0';
+                    document.getElementById('totalFiles').textContent = data.stats.total_files || '0';
                     document.getElementById('status').textContent = 'Ready';
 
                     // Display documents list
