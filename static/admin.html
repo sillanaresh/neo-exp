@@ -373,6 +373,30 @@
             white-space: pre-wrap;
         }
 
+        /* Custom scrollbar styling - always visible */
+        .scrollable {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 #f1f5f9;
+        }
+
+        .scrollable::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .scrollable::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+
+        .scrollable::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .scrollable::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
         /* Upload Progress */
         .upload-progress {
             display: none;
@@ -618,16 +642,12 @@
                             <div class="stat-label">Status</div>
                             <div class="stat-value" style="font-size: 18px;" id="status">Ready</div>
                         </div>
-                        <div class="stat-card">
-                            <div class="stat-label">Database</div>
-                            <div class="stat-value" style="font-size: 18px;">Pinecone</div>
-                        </div>
                     </div>
 
                     <!-- Documents List -->
                     <div id="documentsList" style="display: none; margin-top: 24px;">
                         <h3 style="font-size: 16px; color: #111827; margin-bottom: 12px;">Uploaded Documents</h3>
-                        <div id="documentsContainer" style="max-height: 400px; overflow-y: auto;"></div>
+                        <div id="documentsContainer" class="scrollable" style="max-height: 400px; overflow-y: auto;"></div>
                     </div>
                 </div>
             </div>
@@ -677,7 +697,7 @@
             if (validFiles.length > 0) {
                 let filesHTML = '<div style="background: #f9fafb; padding: 12px; border-radius: 8px; border: 1px solid #e5e7eb;">';
                 filesHTML += `<div style="font-weight: 600; margin-bottom: 8px; color: #111827;">Selected Files (${validFiles.length}):</div>`;
-                filesHTML += '<div style="max-height: 200px; overflow-y: auto; padding-right: 8px;">';
+                filesHTML += '<div class="scrollable" style="max-height: 200px; overflow-y: auto; padding-right: 8px;">';
 
                 validFiles.forEach(file => {
                     const fileExt = file.name.split('.').pop().toLowerCase();
