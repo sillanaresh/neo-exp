@@ -93,7 +93,11 @@ async def upload_document(
         )
 
     # Use provided name or filename
-    doc_name = document_name or file.filename
+    # If custom name provided, append the file extension
+    if document_name:
+        doc_name = document_name if document_name.endswith(file_ext) else document_name + file_ext
+    else:
+        doc_name = file.filename
 
     # Save file temporarily
     temp_path = UPLOAD_DIR / file.filename
