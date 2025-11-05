@@ -227,6 +227,21 @@
                 font-size: 15px;
             }
         }
+
+        /* Cat symbol at bottom right */
+        .cat-symbol {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-size: 48px;
+            z-index: 1000;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .cat-symbol:hover {
+            transform: scale(1.2) rotate(10deg);
+        }
     </style>
 </head>
 <body>
@@ -254,6 +269,9 @@
             </a>
         </div>
     </div>
+
+    <!-- Cat symbol at bottom right corner -->
+    <div class="cat-symbol">🐱</div>
 
     <script>
         // Sparkle animation on logo click
