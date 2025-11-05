@@ -389,87 +389,16 @@
         const catSticker = document.getElementById('catSticker');
         const catImage = document.getElementById('catImage');
 
-        // Create audio context for meow sound
-        let audioContext;
+        // Create real meow audio
+        const meowAudio = new Audio('/static/meow.mp3');
+        meowAudio.volume = 0.5; // Set volume to 50%
 
         function playMeowSound() {
-            if (!audioContext) {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            }
-
-            // Create a more realistic "meow" sound
-            const now = audioContext.currentTime;
-            const duration = 0.5;
-
-            // Create three oscillators for richer sound
-            const osc1 = audioContext.createOscillator();
-            const osc2 = audioContext.createOscillator();
-            const osc3 = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-
-            // Add some noise for breath/texture
-            const noiseGain = audioContext.createGain();
-            const noise = audioContext.createBufferSource();
-            const noiseBuffer = audioContext.createBuffer(1, audioContext.sampleRate * duration, audioContext.sampleRate);
-            const noiseData = noiseBuffer.getChannelData(0);
-            for (let i = 0; i < noiseData.length; i++) {
-                noiseData[i] = Math.random() * 2 - 1;
-            }
-            noise.buffer = noiseBuffer;
-
-            // Connect everything
-            osc1.connect(gainNode);
-            osc2.connect(gainNode);
-            osc3.connect(gainNode);
-            noise.connect(noiseGain);
-            noiseGain.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-
-            // Set oscillator types for more natural sound
-            osc1.type = 'sawtooth';
-            osc2.type = 'sine';
-            osc3.type = 'triangle';
-
-            // More realistic meow frequency sweep - starts high, dips, then rises slightly
-            // Main voice
-            osc1.frequency.setValueAtTime(900, now);
-            osc1.frequency.exponentialRampToValueAtTime(450, now + 0.15);
-            osc1.frequency.exponentialRampToValueAtTime(550, now + 0.35);
-            osc1.frequency.exponentialRampToValueAtTime(400, now + duration);
-
-            // Harmonic 1
-            osc2.frequency.setValueAtTime(1350, now);
-            osc2.frequency.exponentialRampToValueAtTime(675, now + 0.15);
-            osc2.frequency.exponentialRampToValueAtTime(825, now + 0.35);
-            osc2.frequency.exponentialRampToValueAtTime(600, now + duration);
-
-            // Sub harmonic
-            osc3.frequency.setValueAtTime(450, now);
-            osc3.frequency.exponentialRampToValueAtTime(225, now + 0.15);
-            osc3.frequency.exponentialRampToValueAtTime(275, now + 0.35);
-            osc3.frequency.exponentialRampToValueAtTime(200, now + duration);
-
-            // More natural volume envelope - quick attack, sustain, gentle release
-            gainNode.gain.setValueAtTime(0, now);
-            gainNode.gain.linearRampToValueAtTime(0.15, now + 0.02);
-            gainNode.gain.linearRampToValueAtTime(0.12, now + 0.2);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, now + duration);
-
-            // Noise envelope - adds breath quality
-            noiseGain.gain.setValueAtTime(0.02, now);
-            noiseGain.gain.linearRampToValueAtTime(0.01, now + 0.1);
-            noiseGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-
-            // Start and stop
-            osc1.start(now);
-            osc2.start(now);
-            osc3.start(now);
-            noise.start(now);
-
-            osc1.stop(now + duration);
-            osc2.stop(now + duration);
-            osc3.stop(now + duration);
-            noise.stop(now + duration);
+            // Reset audio to start if already playing
+            meowAudio.currentTime = 0;
+            meowAudio.play().catch(error => {
+                console.log('Audio playback failed:', error);
+            });
         }
 
         catSticker.addEventListener('click', function(e) {
