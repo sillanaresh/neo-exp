@@ -34,15 +34,16 @@
             opacity: 0.8;
         }
 
-        /* Sparkle animation */
+        /* Star animation */
         .sparkle {
             position: absolute;
-            width: 8px;
-            height: 8px;
-            background: radial-gradient(circle, #fbbf24 0%, #f59e0b 50%, transparent 70%);
-            border-radius: 50%;
+            font-size: 20px;
             pointer-events: none;
             animation: sparkle-float 2s ease-out forwards;
+        }
+
+        .sparkle::before {
+            content: '⭐';
         }
 
         @keyframes sparkle-float {
