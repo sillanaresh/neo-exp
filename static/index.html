@@ -486,8 +486,9 @@
             // Play meow sound
             try {
                 playMeowSound();
+                console.log('🐱 Meow sound played!');
             } catch (error) {
-                console.log('Audio playback not supported');
+                console.log('❌ Audio playback error:', error);
             }
 
             // Create floating hearts
