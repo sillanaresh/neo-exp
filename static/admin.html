@@ -817,12 +817,30 @@
                     const documents = data.stats.documents || [];
                     if (documents.length > 0) {
                         const documentsContainer = document.getElementById('documentsContainer');
-                        documentsContainer.innerHTML = documents.map(doc => `
-                            <div class="document-item">
-                                <div class="document-name">📄 ${doc.name}</div>
-                                <div class="document-chunks">${doc.chunks} chunk${doc.chunks !== 1 ? 's' : ''}</div>
-                            </div>
-                        `).join('');
+                        documentsContainer.innerHTML = documents.map(doc => {
+                            // Detect file type from name
+                            const ext = doc.name.toLowerCase().split('.').pop();
+                            let fileIcon = '📄';
+                            let fileType = '';
+
+                            if (ext === 'md') {
+                                fileIcon = '📝';
+                                fileType = 'Markdown';
+                            } else if (ext === 'pdf') {
+                                fileIcon = '📕';
+                                fileType = 'PDF';
+                            } else if (ext === 'txt') {
+                                fileIcon = '📃';
+                                fileType = 'Text';
+                            }
+
+                            return `
+                                <div class="document-item">
+                                    <div class="document-name">${fileIcon} ${doc.name} <span style="color: #9ca3af; font-size: 12px; font-weight: 400;">(${fileType})</span></div>
+                                    <div class="document-chunks">${doc.chunks} chunk${doc.chunks !== 1 ? 's' : ''}</div>
+                                </div>
+                            `;
+                        }).join('');
                         document.getElementById('documentsList').style.display = 'block';
                     }
 
