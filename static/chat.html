@@ -874,10 +874,11 @@
             const centerX = rect.left + rect.width / 2;
             const centerY = rect.top + rect.height / 2;
 
-            // Create 12 sparkles
+            // Create 12 stars
             for (let i = 0; i < 12; i++) {
                 const sparkle = document.createElement('div');
                 sparkle.className = 'sparkle';
+                sparkle.textContent = '⭐'; // Add star directly
 
                 // Random direction
                 const angle = (i * 30) * Math.PI / 180; // Evenly distributed

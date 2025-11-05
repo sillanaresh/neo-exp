@@ -543,41 +543,26 @@
         <div class="grid">
             <!-- Upload Document Card -->
             <div class="card">
-                <h2>Upload Document</h2>
+                <h2>Upload Documents</h2>
                 <form id="uploadForm">
                     <div class="form-group">
-                        <label for="documentName">Document Name (optional)</label>
-                        <input
-                            type="text"
-                            id="documentName"
-                            placeholder="e.g., Shell Authentication Guide"
-                        >
-                    </div>
-
-                    <div class="form-group">
-                        <label for="fileInput">Select File</label>
+                        <label for="fileInput">Select Files (multiple allowed)</label>
                         <div class="file-input-wrapper">
                             <label class="file-input-label" for="fileInput">
-                                📄 Click to choose file or drag and drop
+                                📄 Click to choose files or drag and drop
                             </label>
-                            <input type="file" id="fileInput" accept=".md,.txt,.pdf">
+                            <input type="file" id="fileInput" accept=".md,.txt,.pdf" multiple>
                         </div>
-                        <div class="file-name" id="fileName"></div>
 
-                        <!-- File Preview -->
-                        <div class="file-preview" id="filePreview">
-                            <div class="file-preview-item"><strong>Size:</strong> <span id="previewSize"></span></div>
-                            <div class="file-preview-item"><strong>Estimated chunks:</strong> <span id="previewChunks"></span></div>
-                            <div class="file-preview-item"><strong>Preview:</strong></div>
-                            <div class="preview-text" id="previewText"></div>
-                        </div>
+                        <!-- Selected Files List -->
+                        <div id="filesList" style="display: none; margin-top: 12px;"></div>
 
                         <!-- Upload Progress -->
                         <div class="upload-progress" id="uploadProgress">
                             <div class="progress-bar">
                                 <div class="progress-fill" id="progressFill" style="width: 0%"></div>
                             </div>
-                            <div class="progress-text" id="progressText">Uploading... 0%</div>
+                            <div class="progress-text" id="progressText">Uploading... 0/0</div>
                         </div>
                     </div>
 
@@ -592,7 +577,7 @@
                     </div>
 
                     <button type="submit" class="upload-button" id="uploadButton">
-                        Upload Document
+                        Upload Documents
                     </button>
                 </form>
 
@@ -657,59 +642,86 @@
         const messageDiv = document.getElementById('message');
         const statsMessageDiv = document.getElementById('statsMessage');
 
+        // Allowed file extensions
+        const allowedExtensions = ['.md', '.txt', '.pdf'];
+
         fileInput.addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                fileName.textContent = `Selected: ${file.name}`;
-
-                // Show file preview
-                const preview = document.getElementById('filePreview');
-                const sizeKB = (file.size / 1024).toFixed(2);
-                const sizeMB = sizeKB > 1024 ? (sizeKB / 1024).toFixed(2) + ' MB' : sizeKB + ' KB';
-                document.getElementById('previewSize').textContent = sizeMB;
-
-                // Estimate chunks (rough: 2000 tokens ≈ 8000 chars ≈ 1500 words)
-                const estimatedChunks = Math.ceil(file.size / 8000);
-                document.getElementById('previewChunks').textContent = `~${estimatedChunks} chunk${estimatedChunks !== 1 ? 's' : ''}`;
-
-                // Read and show first 500 characters
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    const text = event.target.result;
-                    const preview_text = text.substring(0, 500) + (text.length > 500 ? '...' : '');
-                    document.getElementById('previewText').textContent = preview_text;
-                };
-
-                if (file.type === 'application/pdf') {
-                    document.getElementById('previewText').textContent = '[PDF Preview not available - will be processed on upload]';
-                } else {
-                    reader.readAsText(file);
-                }
-
-                preview.classList.add('show');
-            } else {
+            const files = e.target.files;
+            if (files.length === 0) {
                 fileName.textContent = '';
-                document.getElementById('filePreview').classList.remove('show');
+                document.getElementById('filesList').style.display = 'none';
+                return;
+            }
+
+            // Validate all files
+            const validFiles = [];
+            const invalidFiles = [];
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+
+                if (allowedExtensions.includes(fileExt)) {
+                    validFiles.push(file);
+                } else {
+                    invalidFiles.push({ name: file.name, reason: `Invalid type (${fileExt})` });
+                }
+            }
+
+            // Display file list
+            const filesList = document.getElementById('filesList');
+            if (validFiles.length > 0) {
+                let filesHTML = '<div style="background: #f9fafb; padding: 12px; border-radius: 8px; border: 1px solid #e5e7eb;">';
+                filesHTML += `<div style="font-weight: 600; margin-bottom: 8px; color: #111827;">Selected Files (${validFiles.length}):</div>`;
+
+                validFiles.forEach(file => {
+                    const fileExt = file.name.split('.').pop().toLowerCase();
+                    const icon = fileExt === 'pdf' ? '📕' : fileExt === 'md' ? '📘' : '📄';
+                    const sizeKB = (file.size / 1024).toFixed(1);
+                    const sizeStr = sizeKB > 1024 ? (sizeKB / 1024).toFixed(1) + ' MB' : sizeKB + ' KB';
+
+                    filesHTML += `<div style="padding: 6px 0; color: #374151; font-size: 14px;">${icon} ${file.name} <span style="color: #9ca3af;">(${sizeStr})</span></div>`;
+                });
+
+                filesHTML += '</div>';
+                filesList.innerHTML = filesHTML;
+                filesList.style.display = 'block';
+                fileName.textContent = `${validFiles.length} file${validFiles.length !== 1 ? 's' : ''} selected`;
+            }
+
+            // Show validation errors
+            if (invalidFiles.length > 0) {
+                let errorMsg = `⚠️ ${invalidFiles.length} invalid file${invalidFiles.length !== 1 ? 's' : ''}: `;
+                errorMsg += invalidFiles.map(f => f.name).join(', ');
+                errorMsg += `. Allowed types: ${allowedExtensions.join(', ')}`;
+                showMessage(errorMsg, 'error', false);
             }
         });
 
         uploadForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const file = fileInput.files[0];
-            if (!file) {
-                showMessage('Please select a file to upload', 'error', true);
+            const files = fileInput.files;
+            if (files.length === 0) {
+                showMessage('Please select files to upload', 'error', true);
                 return;
             }
 
             const password = document.getElementById('password').value;
-            const documentName = document.getElementById('documentName').value;
 
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('password', password);
-            if (documentName) {
-                formData.append('document_name', documentName);
+            // Filter valid files only
+            const validFiles = [];
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+                if (allowedExtensions.includes(fileExt)) {
+                    validFiles.push(file);
+                }
+            }
+
+            if (validFiles.length === 0) {
+                showMessage('No valid files to upload', 'error', true);
+                return;
             }
 
             uploadButton.disabled = true;
@@ -721,62 +733,95 @@
             const progressText = document.getElementById('progressText');
             progress.classList.add('show');
 
-            // Simulate progress (since we can't track real progress with FormData)
-            let simulatedProgress = 0;
-            const progressInterval = setInterval(() => {
-                if (simulatedProgress < 90) {
-                    simulatedProgress += 10;
-                    progressFill.style.width = simulatedProgress + '%';
-                    progressText.textContent = `Processing... ${simulatedProgress}%`;
+            const totalFiles = validFiles.length;
+            const successfulUploads = [];
+            const failedUploads = [];
+
+            // Upload files sequentially
+            for (let i = 0; i < validFiles.length; i++) {
+                const file = validFiles[i];
+                const fileNumber = i + 1;
+
+                // Update progress
+                const progressPercent = Math.round((i / totalFiles) * 100);
+                progressFill.style.width = progressPercent + '%';
+                progressText.textContent = `Uploading ${fileNumber} of ${totalFiles}...`;
+
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('password', password);
+                // Don't send document_name - use actual filename
+
+                try {
+                    const response = await fetch('/api/admin/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        successfulUploads.push({
+                            name: file.name,
+                            chunks: data.chunks_created
+                        });
+                    } else {
+                        failedUploads.push({
+                            name: file.name,
+                            reason: data.detail || 'Upload failed'
+                        });
+                    }
+
+                } catch (error) {
+                    failedUploads.push({
+                        name: file.name,
+                        reason: error.message.includes('Failed to fetch')
+                            ? 'Network error'
+                            : error.message
+                    });
+                    console.error(`Error uploading ${file.name}:`, error);
                 }
-            }, 200);
-
-            try {
-                const response = await fetch('/api/admin/upload', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                clearInterval(progressInterval);
-                progressFill.style.width = '100%';
-                progressText.textContent = 'Complete! 100%';
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    showMessage(
-                        `✓ Success! ${data.message}. Created ${data.chunks_created} chunks.`,
-                        'success'
-                    );
-                    uploadForm.reset();
-                    fileName.textContent = '';
-                    document.getElementById('filePreview').classList.remove('show');
-
-                    // Hide progress after 1 second
-                    setTimeout(() => {
-                        progress.classList.remove('show');
-                        progressFill.style.width = '0%';
-                    }, 1000);
-                } else {
-                    const errorMsg = data.detail || 'Upload failed';
-                    showMessage(errorMsg, 'error', true);
-                    progress.classList.remove('show');
-                }
-
-            } catch (error) {
-                clearInterval(progressInterval);
-                progress.classList.remove('show');
-
-                const friendlyError = error.message.includes('Failed to fetch')
-                    ? 'Network error - please check your connection and try again'
-                    : `Upload failed: ${error.message}`;
-
-                showMessage(friendlyError, 'error', true);
-                console.error('Full error:', error);
-            } finally {
-                uploadButton.disabled = false;
-                uploadButton.textContent = 'Upload Document';
             }
+
+            // Complete progress
+            progressFill.style.width = '100%';
+            progressText.textContent = `Completed: ${successfulUploads.length} of ${totalFiles}`;
+
+            // Show results summary
+            let resultMessage = '';
+            if (successfulUploads.length === totalFiles) {
+                resultMessage = `✓ Success! All ${totalFiles} file${totalFiles !== 1 ? 's' : ''} uploaded successfully.`;
+                showMessage(resultMessage, 'success');
+            } else if (successfulUploads.length > 0) {
+                resultMessage = `✓ Uploaded ${successfulUploads.length} of ${totalFiles} files successfully.\n`;
+                if (failedUploads.length > 0) {
+                    resultMessage += `\n❌ Failed files:\n`;
+                    failedUploads.forEach(f => {
+                        resultMessage += `• ${f.name}: ${f.reason}\n`;
+                    });
+                }
+                showMessage(resultMessage, 'warning', true);
+            } else {
+                resultMessage = `❌ All uploads failed.\n`;
+                failedUploads.forEach(f => {
+                    resultMessage += `• ${f.name}: ${f.reason}\n`;
+                });
+                showMessage(resultMessage, 'error', true);
+            }
+
+            // Reset form
+            uploadForm.reset();
+            fileName.textContent = '';
+            document.getElementById('filesList').style.display = 'none';
+
+            // Hide progress after 2 seconds
+            setTimeout(() => {
+                progress.classList.remove('show');
+                progressFill.style.width = '0%';
+            }, 2000);
+
+            uploadButton.disabled = false;
+            uploadButton.textContent = 'Upload Documents';
         });
 
         function showMessage(text, type, showRetry = false) {
@@ -896,10 +941,11 @@
             const centerX = rect.left + rect.width / 2;
             const centerY = rect.top + rect.height / 2;
 
-            // Create 12 sparkles
+            // Create 12 stars
             for (let i = 0; i < 12; i++) {
                 const sparkle = document.createElement('div');
                 sparkle.className = 'sparkle';
+                sparkle.textContent = '⭐'; // Add star directly
 
                 // Random direction
                 const angle = (i * 30) * Math.PI / 180;
