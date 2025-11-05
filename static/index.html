@@ -232,7 +232,7 @@
         .cat-sticker {
             position: fixed;
             bottom: 24px;
-            left: 24px;
+            right: 24px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -242,13 +242,17 @@
         }
 
         .cat-sticker:hover {
-            transform: scale(1.1);
+            transform: scale(1.05);
         }
 
-        .cat-emoji {
-            font-size: 64px;
-            line-height: 1;
+        .cat-image {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 50%;
             margin-bottom: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border: 3px solid white;
         }
 
         .cat-text {
@@ -306,11 +310,12 @@
         @media (max-width: 768px) {
             .cat-sticker {
                 bottom: 16px;
-                left: 16px;
+                right: 16px;
             }
 
-            .cat-emoji {
-                font-size: 48px;
+            .cat-image {
+                width: 80px;
+                height: 80px;
             }
 
             .cat-text {
@@ -348,7 +353,7 @@
 
     <!-- Cute Cat Sticker -->
     <div class="cat-sticker" id="catSticker">
-        <div class="cat-emoji">🐱</div>
+        <img src="/static/cute-cat.jpg" alt="Cute Cat" class="cat-image" id="catImage">
         <div class="cat-text">play with me</div>
     </div>
 
@@ -385,7 +390,7 @@
 
         // Cute cat interaction
         const catSticker = document.getElementById('catSticker');
-        const catEmoji = catSticker.querySelector('.cat-emoji');
+        const catImage = document.getElementById('catImage');
 
         // Create audio context for meow sound
         let audioContext;
@@ -433,13 +438,13 @@
 
         catSticker.addEventListener('click', function(e) {
             // Add jiggle animation
-            catEmoji.classList.remove('jiggle');
-            void catEmoji.offsetWidth; // Trigger reflow
-            catEmoji.classList.add('jiggle');
+            catImage.classList.remove('jiggle');
+            void catImage.offsetWidth; // Trigger reflow
+            catImage.classList.add('jiggle');
 
             // Remove jiggle class after animation
             setTimeout(() => {
-                catEmoji.classList.remove('jiggle');
+                catImage.classList.remove('jiggle');
             }, 800);
 
             // Play meow sound
