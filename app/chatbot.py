@@ -7,7 +7,11 @@ from app.vector_store import get_vector_store
 class NeoRAGChatbot:
     def __init__(self):
         self.conversations = {}  # Store conversation history by session_id
-        self.openai_client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        # Use OpenRouter for LLM calls
+        self.openai_client = OpenAI(
+            api_key=settings.OPENROUTER_API_KEY,
+            base_url="https://openrouter.ai/api/v1"
+        )
 
     def chat(self, message: str, session_id: str = "default") -> Dict[str, Any]:
         """
