@@ -8,7 +8,11 @@ import hashlib
 class VectorStore:
     def __init__(self):
         self.pc = Pinecone(api_key=settings.PINECONE_API_KEY)
-        self.openai_client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        # Use OpenRouter for embeddings
+        self.openai_client = OpenAI(
+            api_key=settings.OPENROUTER_API_KEY,
+            base_url="https://openrouter.ai/api/v1"
+        )
         self.index_name = settings.PINECONE_INDEX_NAME
         self.index = None
         self._initialize_index()
@@ -41,7 +45,7 @@ class VectorStore:
         print(f"Connected to index: {self.index_name} (host: {index_host})")
 
     def create_embedding(self, text: str) -> List[float]:
-        """Create embedding using OpenAI"""
+        """Create embedding using OpenRouter"""
         response = self.openai_client.embeddings.create(
             input=text,
             model=settings.EMBEDDING_MODEL
